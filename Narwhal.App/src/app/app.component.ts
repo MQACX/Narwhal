@@ -21,7 +21,19 @@ import { WarningIntersection } from "./models/warning-intersection";
 export class AppComponent implements OnInit {
 	map: Map;
 	hardwareRendering = supported({ failIfMajorPerformanceCaveat: true });
-	warnings: WarningIntersection[] = [];
+
+	warnings: WarningIntersection[] = [
+		{
+			vessel1: "test1",
+			vessel2: "test2",
+			time: new Date(2022, 10, 4, 5, 12, 49),
+		},
+		{
+			vessel1: "test2",
+			vessel2: "test4",
+			time: new Date(2022, 10, 5, 9, 30, 5),
+		},
+	];
 
 	ngOnInit() {
 		const mapboxOptions: MapboxOptions = {
@@ -196,6 +208,13 @@ export class AppComponent implements OnInit {
 					for (const [vessel, points] of Object.entries(
 						groupedData
 					)) {
+						// this.warnings = this.getIntersections(
+						// 	points,
+						// 	Object.entries(groupedData).filter(
+						// 		(x) => x[0] !== vessel
+						// 	)
+						// );
+
 						const totalDistanceKm = this.getTotalDistanceKm(points);
 						const totalDurationHours =
 							this.getTotalDurationHours(points);
@@ -295,6 +314,11 @@ export class AppComponent implements OnInit {
 				break;
 			}
 
+			// Would have used the distanceTo function https://docs.mapbox.com/mapbox-gl-js/api/geography/#lnglat
+			// This function seems to not be available in version 1 of mapbox-gl
+			// const lngLat1 = new LngLat(point1.longitude, point1.latitude);
+			// const lngLat2 = new LngLat(point2.longitude, point2.latitude);
+			// const distance = lngLat1.distanceTo(lngLat2);
 			const distance = this.getDistance(point1, point2);
 
 			totalDistance += distance;
@@ -354,4 +378,102 @@ export class AppComponent implements OnInit {
 			return { ...prev, [groupKey]: group };
 		}, {});
 	}
+
+	// This doesn't work. But the idea is to get a list of every intersection for each vessel and filter those that
+	// doesn't occur within one hour of each other.
+	// The end list would be shown in the warning-panel with the name of the two vessel and the approximate time.
+	//
+	// private getIntersections(
+	// 	currentPoints: TrackingPoint[],
+	// 	groupedPoints: [string, TrackingPoint[]][]
+	// ): WarningIntersection[] {
+	// 	for (let i = 0; i < currentPoints.length; i++) {
+	// 		const pA1 = currentPoints[i];
+	// 		const pA2 = currentPoints[i + 1];
+	// 		if (!pA2) {
+	// 			break;
+	// 		}
+
+	// 		for (const group of groupedPoints) {
+	// 			for (let y = 0; y < group[1].length; y++) {
+	// 				const pB1 = group[1][y];
+	// 				const pB2 = group[1][y + 1];
+	// 				if (!pB2) {
+	// 					break;
+	// 				}
+
+	// 				const intersection = this.calculateIntersection(
+	// 					{
+	// 						x:
+	// 							Math.cos((pA1.latitude / 180) * Math.PI) *
+	// 							Math.sin((pA1.longitude / 180) * Math.PI),
+	// 						y:
+	// 							Math.cos((pA1.latitude / 180) * Math.PI) *
+	// 							Math.cos((pA1.longitude / 180) * Math.PI),
+	// 					},
+	// 					{
+	// 						x:
+	// 							Math.cos((pA2.latitude / 180) * Math.PI) *
+	// 							Math.sin((pA2.longitude / 180) * Math.PI),
+	// 						y:
+	// 							Math.cos((pA2.latitude / 180) * Math.PI) *
+	// 							Math.cos((pA2.longitude / 180) * Math.PI),
+	// 					},
+	// 					{
+	// 						x:
+	// 							Math.cos((pB1.latitude / 180) * Math.PI) *
+	// 							Math.sin((pB1.longitude / 180) * Math.PI),
+	// 						y:
+	// 							Math.cos((pB1.latitude / 180) * Math.PI) *
+	// 							Math.cos((pB1.longitude / 180) * Math.PI),
+	// 					},
+	// 					{
+	// 						x:
+	// 							Math.cos((pB2.latitude / 180) * Math.PI) *
+	// 							Math.sin((pB2.longitude / 180) * Math.PI),
+	// 						y:
+	// 							Math.cos((pB2.latitude / 180) * Math.PI) *
+	// 							Math.cos((pB2.longitude / 180) * Math.PI),
+	// 					}
+	// 				);
+
+	// 				// if (!intersection) {
+	// 				console.log(intersection);
+	// 				// }
+	// 			}
+	// 		}
+	// 	}
+
+	// 	return [];
+	// }
+
+	// private calculateIntersection(
+	// 	p1: { x: number; y: number },
+	// 	p2: { x: number; y: number },
+	// 	p3: { x: number; y: number },
+	// 	p4: { x: number; y: number }
+	// ): { x: number; y: number } | undefined {
+	// 	const c2x = p3.x - p4.x; // (x3 - x4)
+	// 	const c3x = p1.x - p2.x; // (x1 - x2)
+	// 	const c2y = p3.y - p4.y; // (y3 - y4)
+	// 	const c3y = p1.y - p2.y; // (y1 - y2)
+
+	// 	// down part of intersection point formula
+	// 	const d = c3x * c2y - c3y * c2x;
+
+	// 	if (d == 0) {
+	// 		return undefined;
+	// 	}
+
+	// 	// upper part of intersection point formula
+	// 	const u1 = p1.x * p2.y - p1.y * p2.x; // (x1 * y2 - y1 * x2)
+	// 	const u4 = p3.x * p4.y - p3.y * p4.x; // (x3 * y4 - y3 * x4)
+
+	// 	// intersection point formula
+
+	// 	const px = (u1 * c2x - c3x * u4) / d;
+	// 	const py = (u1 * c2y - c3y * u4) / d;
+
+	// 	return { x: px, y: py };
+	// }
 }
