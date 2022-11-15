@@ -15,7 +15,7 @@ using Narwhal.Service.Services;
 namespace Narwhal.Service.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class TrackingController : ControllerBase
     {
         private readonly ILogger<TrackingController> _logger;

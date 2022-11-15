@@ -80,7 +80,9 @@ def main():
     database = client.narwhal
     navwarningCollection = database.navwarnings
 
-    navwarningCollection.remove({})
+    # I'm unsure why, but the function .remove({}) didn't exist in the Collection type.
+    # Full error: TypeError: 'Collection' object is not callable. If you meant to call the 'remove' method on a 'Collection' object it is failing because no such method exists.
+    navwarningCollection.delete_many({})
     for navwarning in navwarnings:
         navwarningCollection.insert_one(navwarning)
 

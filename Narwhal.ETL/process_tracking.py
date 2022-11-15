@@ -113,7 +113,9 @@ def main():
     database = client.narwhal
     trackingCollection = database.tracking
 
-    trackingCollection.remove({})
+    # I'm unsure why, but the function .remove({}) didn't exist in the Collection type.
+    # Full error: TypeError: 'Collection' object is not callable. If you meant to call the 'remove' method on a 'Collection' object it is failing because no such method exists.
+    trackingCollection.delete_many({})
     for trackingPoint in trackingPoints:
         trackingCollection.insert_one(trackingPoint)
 
