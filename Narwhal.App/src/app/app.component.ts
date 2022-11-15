@@ -194,6 +194,14 @@ export class AppComponent implements OnInit {
 					for (const [vessel, points] of Object.entries(
 						groupedData
 					)) {
+						const totalDistanceKm = this.getTotalDistanceKm(points);
+						const totalDurationHours =
+							this.getTotalDurationHours(points);
+						const averageSpeed = this.getAverageSpeed(
+							totalDistanceKm,
+							totalDurationHours
+						);
+
 						lines.push({
 							type: "Feature",
 							properties: {
@@ -202,6 +210,12 @@ export class AppComponent implements OnInit {
 									(((vessel as any) * 1) % 255) +
 									", 50%, 50%)",
 								description: "Vessel " + vessel,
+								totalDistance: `Total Distance ${totalDistanceKm.toFixed(
+									6
+								)} km`,
+								averageSpeed: `Average Speed ${averageSpeed.toFixed(
+									6
+								)} km/h`,
 							},
 							geometry: {
 								type: "LineString",
@@ -232,11 +246,17 @@ export class AppComponent implements OnInit {
 				// Change the cursor style as a UI indicator.
 				this.map.getCanvas().style.cursor = "pointer";
 
-				var description = e.features[0].properties.description;
+				const prop = e.features[0].properties;
+
+				const html = `
+				<div>${prop.description}</div>
+				<div>${prop.totalDistance}</div>
+				<div>${prop.averageSpeed}</div>
+				`;
 
 				// Populate the popup and set its coordinates
 				// based on the feature found.
-				popup.setLngLat(e.lngLat).setHTML(description).addTo(this.map);
+				popup.setLngLat(e.lngLat).setHTML(html).addTo(this.map);
 			});
 
 			this.map.on("mouseleave", "tracking-points-layer", () => {
@@ -244,6 +264,84 @@ export class AppComponent implements OnInit {
 				popup.remove();
 			});
 		});
+	}
+
+	/**
+	 * Get the total hours that have passed between the first and last tracking point.
+	 * @remarks This takes into consideration that the list is already sorted by date.
+	 * @param points the list of tracking points.
+	 * @returns the total hours that have passed between the first and last tracking point.
+	 */
+	private getTotalDurationHours(points: TrackingPoint[]): number {
+		const start = new Date(points[0].date);
+		const end = new Date(points[points.length - 1].date);
+		const ms = end.getTime() - start.getTime();
+		return ms / 1000 / 60 / 60;
+	}
+
+	/**
+	 * Get the total distance from a list of tracking points (km).
+	 * @param points the list of tracking points.
+	 * @returns The total distance from a list of tracking points (km).
+	 */
+	private getTotalDistanceKm(points: TrackingPoint[]): number {
+		let totalDistance = 0;
+		for (let index = 0; index < points.length; index++) {
+			const point1 = points[index];
+			const point2 = points[index + 1];
+			if (!point2) {
+				break;
+			}
+
+			const distance = this.getDistance(point1, point2);
+
+			totalDistance += distance;
+		}
+		return totalDistance;
+	}
+
+	/**
+	 * Get the distance between two points (km).
+	 * @param point1 first point.
+	 * @param point2 second point.
+	 * @returns the distance between two points (km).
+	 */
+	private getDistance(
+		point1: { latitude: number; longitude: number },
+		point2: { latitude: number; longitude: number }
+	): number {
+		if (
+			point1.latitude === point2.latitude &&
+			point1.longitude === point2.longitude
+		) {
+			return 0;
+		} else {
+			var radlat1 = (Math.PI * point1.latitude) / 180;
+			var radlat2 = (Math.PI * point2.latitude) / 180;
+			var theta = point1.longitude - point2.longitude;
+			var radtheta = (Math.PI * theta) / 180;
+			var distance =
+				Math.sin(radlat1) * Math.sin(radlat2) +
+				Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+			if (distance > 1) {
+				distance = 1;
+			}
+			distance = Math.acos(distance);
+			distance = (distance * 180) / Math.PI;
+			distance = distance * 1.609344;
+
+			return distance;
+		}
+	}
+
+	/**
+	 * Get the average speed (km/h).
+	 * @param km The amount of km.
+	 * @param hours The amount of hours.
+	 * @returns The average speed (km/h).
+	 */
+	private getAverageSpeed(km: number, hours: number): number {
+		return km / hours;
 	}
 
 	private groupBy<T>(arr: T[], fn: (item: T) => any) {
