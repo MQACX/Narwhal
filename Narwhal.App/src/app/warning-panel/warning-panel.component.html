@@ -1,0 +1,7 @@
+<p *ngIf="warnings?.length"><b>WARNING</b></p>
+
+<p *ngFor="let warning of warnings">
+	Vessel <b>{{ warning.vessel1 }}</b> and <b>{{ warning.vessel2 }}</b> will be
+	close at
+	<b>{{ warning.time | date: "short" }}</b>
+</p>

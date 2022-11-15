@@ -37,6 +37,17 @@
     }
 }
 
+.warning-panel {
+	width: auto;
+	height: auto;
+	background-color: orange;
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	border-radius: 5px;
+	padding: 2px 5px;
+}
+
 .warning{
     background-color: orange;
 }

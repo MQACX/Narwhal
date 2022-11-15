@@ -11,6 +11,7 @@ import {
 
 import { FeatureCollection, Feature } from "geojson";
 import { TrackingPoint } from "./models/tracking-point";
+import { WarningIntersection } from "./models/warning-intersection";
 
 @Component({
 	selector: "app-root",
@@ -20,6 +21,7 @@ import { TrackingPoint } from "./models/tracking-point";
 export class AppComponent implements OnInit {
 	map: Map;
 	hardwareRendering = supported({ failIfMajorPerformanceCaveat: true });
+	warnings: WarningIntersection[] = [];
 
 	ngOnInit() {
 		const mapboxOptions: MapboxOptions = {
